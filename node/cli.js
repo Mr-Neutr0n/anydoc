@@ -162,7 +162,12 @@ async function main() {
 
   // Loaded after argument handling so --help and --version work even where
   // no native binding is available.
-  const { formatFromExtension, toMarkdown, toMarkdownBytes } = require('./anydoc.js')
+  const {
+    formatFromBytes,
+    formatFromExtension,
+    toMarkdown,
+    toMarkdownBytes,
+  } = require('./anydoc.js')
 
   let format
   if (args.format !== null) {
@@ -180,10 +185,12 @@ async function main() {
   }
   let markdown
   try {
-    if (args.input === '-') {
-      markdown = await toMarkdownBytes(await readStdin(), format, options)
-    } else if (format !== undefined) {
-      markdown = await toMarkdownBytes(await readFile(args.input), format, options)
+    // A password only reaches the byte-level entry points; a path without
+    // --format would otherwise drop it on the floor (#130 review).
+    if (args.input === '-' || format !== undefined || args.password !== null) {
+      const bytes = await (args.input === '-' ? readStdin() : readFile(args.input))
+      const resolved = format ?? formatFromBytes(bytes)
+      markdown = await toMarkdownBytes(bytes, resolved, options)
     } else {
       markdown = await toMarkdown(args.input, options)
     }
