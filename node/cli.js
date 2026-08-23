@@ -21,6 +21,10 @@ Options:
                          ${FORMATS}
                          (extension aliases like xls, docm, ppsx resolve
                          to these)
+  -p, --password <pw>    Decrypt a password-protected OOXML file first.
+                         Falls back to the ANYDOC_PASSWORD environment
+                         variable when omitted (argv leaks into shell
+                         history and ps).
   --ocr <mode>           What to do with a PDF whose pages need OCR:
                          reject (default) exits 3; hosted sends the
                          document to Firecrawl Parse
@@ -63,7 +67,15 @@ function fail(code, message) {
 }
 
 function parseArgs(argv) {
-  const args = { input: null, output: null, format: null, ocr: null, apiKey: null, apiUrl: null }
+  const args = {
+    input: null,
+    output: null,
+    format: null,
+    password: process.env.ANYDOC_PASSWORD || null,
+    ocr: null,
+    apiKey: null,
+    apiUrl: null,
+  }
   let positionalOnly = false
   for (let i = 0; i < argv.length; i++) {
     let arg = argv[i]
@@ -107,6 +119,10 @@ function parseArgs(argv) {
       case '-f':
       case '--format':
         args.format = value()
+        break
+      case '-p':
+      case '--password':
+        args.password = value()
         break
       case '--ocr':
         args.ocr = value()
@@ -156,7 +172,12 @@ async function main() {
     }
   }
 
-  const options = { ocr: args.ocr ?? undefined, apiKey: args.apiKey ?? undefined, apiUrl: args.apiUrl ?? undefined }
+  const options = {
+    ocr: args.ocr ?? undefined,
+    apiKey: args.apiKey ?? undefined,
+    apiUrl: args.apiUrl ?? undefined,
+    password: args.password ?? undefined,
+  }
   let markdown
   try {
     if (args.input === '-') {
