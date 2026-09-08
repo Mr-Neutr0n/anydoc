@@ -98,6 +98,11 @@ pub fn format_from_path(path: &str) -> Option<Format> {
 /// detected from the content, which signature-less formats (CSV) have to name
 /// explicitly.
 ///
+/// Optional trailing `password` decrypts a password-protected OOXML package
+/// (`.docx`/`.xlsx`/`.pptx`) first. A wrong password throws the same
+/// `encrypted` error as no password at all. When a format is omitted, pass
+/// `undefined` for it: `toMarkdownBytes(bytes, undefined, password)`.
+///
 /// Throws an `Error` carrying a `ConvertErrorCode` on `code`.
 #[wasm_bindgen(js_name = toMarkdownBytes)]
 pub fn to_markdown_bytes(
